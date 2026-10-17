@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Healthcare API Portal & Interactive Playground</title>
+  <meta name="description" content="Interactive API console, documentation, and live management dashboard for the Healthcare Backend REST API.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <header class="top-nav">
+      <div class="nav-left">
+        <div class="brand-logo">
+          <svg class="pulse-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+          <div class="brand-info">
+            <span class="brand-title">Healthcare<span class="gradient-text">API</span></span>
+            <span class="brand-badge">REST v1.0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-center">
+        <div class="status-pill online" id="server-status-pill">
+          <span class="pulse-dot"></span>
+          <span class="status-label">Server: <strong id="server-status-text">Online (:3000)</strong></span>
+        </div>
+        <div class="status-pill db-pill" id="db-status-pill">
+          <span class="pulse-dot green"></span>
+          <span>Database: <strong>PostgreSQL / PGlite</strong></span>
+        </div>
+      </div>
+
+      <div class="nav-right">
+        <div class="auth-status-container">
+          <div class="auth-user-chip" id="auth-user-chip" style="display: none;">
+            <div class="user-avatar" id="user-avatar">U</div>
+            <span class="user-email-text" id="user-email-text">user@example.com</span>
+            <button class="btn-ghost-sm" id="logout-btn" title="Sign Out">Sign Out</button>
+          </div>
+          <button class="btn-primary-sm" id="nav-login-btn">Sign In / Register</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <section class="hero-section">
+        <div class="hero-content">
+          <div class="hero-pill">
+            <span class="hero-pill-icon">✨</span>
+            <span>REST API Active & Ready for Requests</span>
+          </div>
+          <h1 class="hero-title">Healthcare Backend <span class="gradient-text">Management Console</span></h1>
+          <p class="hero-subtitle">
+            Secure, token-authenticated REST service for managing patients, doctor registries, and healthcare mappings. Explore, test endpoints live, and inspect responses directly from your browser.
+          </p>
+
+          <div class="quick-stats-row">
+            <div class="stat-card">
+              <span class="stat-num" id="stat-patients">0</span>
+              <span class="stat-label">My Patients</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-num" id="stat-doctors">0</span>
+              <span class="stat-label">Registered Doctors</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-num" id="stat-mappings">0</span>
+              <span class="stat-label">Doctor Mappings</span>
+            </div>
+            <div class="stat-card stat-status">
+              <span class="stat-num text-success" id="stat-health">200 OK</span>
+              <span class="stat-label">API Health</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="tabs-nav-bar">
+        <button class="tab-btn active" data-tab="tab-auth" id="tab-btn-auth">
+          <span class="tab-icon">🔑</span>
+          <span>Authentication</span>
+        </button>
+        <button class="tab-btn" data-tab="tab-patients" id="tab-btn-patients">
+          <span class="tab-icon">🏥</span>
+          <span>Patients</span>
+          <span class="tab-badge" id="patients-count-badge">0</span>
+        </button>
+        <button class="tab-btn" data-tab="tab-doctors" id="tab-btn-doctors">
+          <span class="tab-icon">🩺</span>
+          <span>Doctors</span>
+          <span class="tab-badge" id="doctors-count-badge">0</span>
+        </button>
+        <button class="tab-btn" data-tab="tab-mappings" id="tab-btn-mappings">
+          <span class="tab-icon">🔗</span>
+          <span>Doctor Mappings</span>
+        </button>
+        <button class="tab-btn" data-tab="tab-explorer" id="tab-btn-explorer">
+          <span class="tab-icon">⚡</span>
+          <span>Live API Explorer</span>
+        </button>
+        <button class="tab-btn" data-tab="tab-docs" id="tab-btn-docs">
+          <span class="tab-icon">📖</span>
+          <span>API Reference</span>
+        </button>
+      </div>
+
+      <section class="tab-pane active" id="tab-auth">
+        <div class="grid-2-col">
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <span class="method-badge post">POST</span>
+                <span class="endpoint-path">/api/auth/register</span>
+              </div>
+              <span class="panel-caption">Create User Account</span>
+            </div>
+            <div class="panel-body">
+              <form id="form-register">
+                <div class="form-group">
+                  <label for="reg-name">Full Name <span class="text-muted">(Optional)</span></label>
+                  <input type="text" id="reg-name" placeholder="Dr. John Smith" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label for="reg-email">Email Address <span class="required">*</span></label>
+                  <input type="email" id="reg-email" placeholder="patient@example.com" class="form-input" required>
+                </div>
+                <div class="form-group">
+                  <label for="reg-password">Password <span class="required">*</span></label>
+                  <input type="password" id="reg-password" placeholder="Min 6 characters" class="form-input" required>
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="btn-primary" id="btn-submit-register">Create Account</button>
+                  <button type="button" class="btn-secondary" id="btn-fill-register-demo">Quick Demo Fill</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <span class="method-badge post">POST</span>
+                <span class="endpoint-path">/api/auth/login</span>
+              </div>
+              <span class="panel-caption">User Authentication</span>
+            </div>
+            <div class="panel-body">
+              <form id="form-login">
+                <div class="form-group">
+                  <label for="login-email">Email Address <span class="required">*</span></label>
+                  <input type="email" id="login-email" placeholder="patient@example.com" class="form-input" required>
+                </div>
+                <div class="form-group">
+                  <label for="login-password">Password <span class="required">*</span></label>
+                  <input type="password" id="login-password" placeholder="Enter password" class="form-input" required>
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="btn-accent" id="btn-submit-login">Sign In & Generate JWT</button>
+                  <button type="button" class="btn-secondary" id="btn-fill-login-demo">Use Test User</button>
+                </div>
+              </form>
+
+              <div class="token-box" id="token-display-box" style="display: none;">
+                <div class="token-box-header">
+                  <span class="token-label">Active Access Token (Bearer)</span>
+                  <button class="btn-copy" id="btn-copy-token" title="Copy Token">Copy</button>
+                </div>
+                <div class="token-string" id="active-token-string">None</div>
+                <div class="token-box-footer">
+                  <button class="btn-secondary-sm" id="btn-refresh-token">Refresh Token (/api/auth/refresh)</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-pane" id="tab-patients">
+        <div class="grid-2-col-asym">
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <span class="method-badge post">POST</span>
+                <span class="endpoint-path">/api/patients</span>
+              </div>
+              <span class="panel-caption">New Patient Record</span>
+            </div>
+            <div class="panel-body">
+              <div class="auth-notice" id="patients-auth-notice">
+                <span>⚠️ You need to be logged in with a valid JWT token to manage patients.</span>
+              </div>
+              <form id="form-create-patient">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="patient-firstname">First Name <span class="required">*</span></label>
+                    <input type="text" id="patient-firstname" placeholder="Alice" class="form-input" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="patient-lastname">Last Name <span class="required">*</span></label>
+                    <input type="text" id="patient-lastname" placeholder="Johnson" class="form-input" required>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="patient-dob">Date of Birth <span class="required">*</span></label>
+                  <input type="date" id="patient-dob" value="1992-05-14" class="form-input" required>
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="btn-primary" id="btn-submit-patient">Save Patient</button>
+                  <button type="button" class="btn-secondary" id="btn-fill-patient-demo">Sample Data</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <span class="method-badge get">GET</span>
+                <span class="endpoint-path">/api/patients</span>
+              </div>
+              <button class="btn-icon-refresh" id="btn-refresh-patients" title="Reload Patients">↻ Reload</button>
+            </div>
+            <div class="panel-body">
+              <div class="items-list-container" id="patients-list">
+                <div class="empty-state">
+                  <div class="empty-icon">🏥</div>
+                  <p>No patients recorded yet.</p>
+                  <span class="text-muted">Sign in and add your first patient using the form.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-pane" id="tab-doctors">
+        <div class="grid-2-col-asym">
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <span class="method-badge post">POST</span>
+                <span class="endpoint-path">/api/doctors</span>
+              </div>
+              <span class="panel-caption">Register Doctor</span>
+            </div>
+            <div class="panel-body">
+              <form id="form-create-doctor">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="doctor-firstname">First Name <span class="required">*</span></label>
+                    <input type="text" id="doctor-firstname" placeholder="Dr. Sarah" class="form-input" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="doctor-lastname">Last Name <span class="required">*</span></label>
+                    <input type="text" id="doctor-lastname" placeholder="Connor" class="form-input" required>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="doctor-specialty">Specialty <span class="required">*</span></label>
+                  <input type="text" id="doctor-specialty" placeholder="Cardiology" class="form-input" required>
+                  <div class="specialty-pills">
+                    <span class="pill-chip" data-spec="Cardiology">Cardiology</span>
+                    <span class="pill-chip" data-spec="Neurology">Neurology</span>
+                    <span class="pill-chip" data-spec="Pediatrics">Pediatrics</span>
+                    <span class="pill-chip" data-spec="Oncology">Oncology</span>
+                    <span class="pill-chip" data-spec="Orthopedics">Orthopedics</span>
+                  </div>
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="btn-accent" id="btn-submit-doctor">Add Doctor</button>
+                  <button type="button" class="btn-secondary" id="btn-fill-doctor-demo">Sample Data</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <span class="method-badge get">GET</span>
+                <span class="endpoint-path">/api/doctors</span>
+              </div>
+              <button class="btn-icon-refresh" id="btn-refresh-doctors" title="Reload Doctors">↻ Reload</button>
+            </div>
+            <div class="panel-body">
+              <div class="items-list-container" id="doctors-list">
+                <div class="empty-state">
+                  <div class="empty-icon">🩺</div>
+                  <p>No doctors in directory.</p>
+                  <span class="text-muted">Add a doctor on the left to populate the directory.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-pane" id="tab-mappings">
+        <div class="grid-2-col-asym">
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <span class="method-badge post">POST</span>
+                <span class="endpoint-path">/api/patients/:patientId/mappings</span>
+              </div>
+              <span class="panel-caption">Assign Doctor to Patient</span>
+            </div>
+            <div class="panel-body">
+              <form id="form-create-mapping">
+                <div class="form-group">
+                  <label for="mapping-patient-select">Select Patient <span class="required">*</span></label>
+                  <select id="mapping-patient-select" class="form-select" required>
+                    <option value="">-- Choose Patient --</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="mapping-doctor-select">Select Doctor to Assign <span class="required">*</span></label>
+                  <select id="mapping-doctor-select" class="form-select" required>
+                    <option value="">-- Choose Doctor --</option>
+                  </select>
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="btn-primary" id="btn-submit-mapping">Assign Doctor</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="panel-card">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <span class="method-badge get">GET</span>
+                <span class="endpoint-path">/api/patients/:patientId/mappings</span>
+              </div>
+              <span class="panel-caption">Assigned Doctors List</span>
+            </div>
+            <div class="panel-body">
+              <div class="form-group mb-4">
+                <label for="filter-mapping-patient">View Mappings For Patient:</label>
+                <select id="filter-mapping-patient" class="form-select">
+                  <option value="">-- Select Patient to view mappings --</option>
+                </select>
+              </div>
+              <div class="items-list-container" id="mappings-list">
+                <div class="empty-state">
+                  <div class="empty-icon">🔗</div>
+                  <p>Select a patient above to view their assigned doctors.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-pane" id="tab-explorer">
+        <div class="panel-card full-width">
+          <div class="panel-header">
+            <div class="panel-title-group">
+              <span class="tab-icon">⚡</span>
+              <span class="panel-title">Custom HTTP Request Console</span>
+            </div>
+            <span class="panel-caption">Directly execute any API method with headers</span>
+          </div>
+          <div class="panel-body">
+            <div class="explorer-request-bar">
+              <select id="explorer-method" class="form-select method-selector">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="PATCH">PATCH</option>
+                <option value="DELETE">DELETE</option>
+              </select>
+              <input type="text" id="explorer-url" value="/health" class="form-input explorer-input" placeholder="/api/patients">
+              <button class="btn-primary" id="btn-send-explorer">Send Request</button>
+            </div>
+
+            <div class="explorer-presets">
+              <span class="text-muted text-xs">Presets:</span>
+              <button class="preset-chip" data-method="GET" data-url="/health">GET /health</button>
+              <button class="preset-chip" data-method="GET" data-url="/api/patients">GET /api/patients</button>
+              <button class="preset-chip" data-method="GET" data-url="/api/doctors">GET /api/doctors</button>
+            </div>
+
+            <div class="form-group mt-4">
+              <label for="explorer-body">JSON Request Body (For POST, PUT, PATCH):</label>
+              <textarea id="explorer-body" class="form-textarea code-font" rows="4" placeholder='{"firstName": "Jane", "lastName": "Doe"}'></textarea>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-pane" id="tab-docs">
+        <div class="panel-card full-width">
+          <div class="panel-header">
+            <div class="panel-title">Healthcare REST API Specification</div>
+            <span class="panel-caption">All available endpoints & status codes</span>
+          </div>
+          <div class="panel-body">
+            <div class="table-responsive">
+              <table class="docs-table">
+                <thead>
+                  <tr>
+                    <th>Method</th>
+                    <th>Endpoint</th>
+                    <th>Authentication</th>
+                    <th>Description</th>
+                    <th>Expected Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="method-badge get">GET</span></td>
+                    <td><code>/health</code></td>
+                    <td><span class="badge-public">Public</span></td>
+                    <td>Server health check and database connectivity ping</td>
+                    <td><code>200 OK</code></td>
+                  </tr>
+                  <tr>
+                    <td><span class="method-badge post">POST</span></td>
+                    <td><code>/api/auth/register</code></td>
+                    <td><span class="badge-public">Public</span></td>
+                    <td>Register a new user (email, password, optional name)</td>
+                    <td><code>201 Created</code>, <code>409 Conflict</code></td>
+                  </tr>
+                  <tr>
+                    <td><span class="method-badge post">POST</span></td>
+                    <td><code>/api/auth/login</code></td>
+                    <td><span class="badge-public">Public</span></td>
+                    <td>Authenticate user and return accessToken + refreshToken</td>
+                    <td><code>200 OK</code>, <code>401 Unauthorized</code></td>
+                  </tr>
+                  <tr>
+                    <td><span class="method-badge post">POST</span></td>
+                    <td><code>/api/auth/refresh</code></td>
+                    <td><span class="badge-public">Public</span></td>
+                    <td>Exchange refreshToken for a fresh accessToken</td>
+                    <td><code>200 OK</code>, <code>401 Unauthorized</code></td>
+                  </tr>
+                  <tr>
+                    <td><span class="method-badge get">GET</span></td>
+                    <td><code>/api/patients</code></td>
+                    <td><span class="badge-auth">Bearer JWT</span></td>
+                    <td>List all patients belonging to the authenticated user</td>
+                    <td><code>200 OK</code>, <code>401 Unauthorized</code></td>
+                  </tr>
+                  <tr>
+                    <td><span class="method-badge post">POST</span></td>
+                    <td><code>/api/patients</code></td>
+                    <td><span class="badge-auth">Bearer JWT</span></td>
+                    <td>Create a new patient record (firstName, lastName, birthDate)</td>
+                    <td><code>201 Created</code>, <code>400 Bad Request</code></td>
+                  </tr>
+                  <tr>
+                    <td><span class="method-badge get">GET</span></td>
+                    <td><code>/api/patients/:id</code></td>
+                    <td><span class="badge-auth">Bearer JWT</span></td>
+                    <td>Retrieve specific patient owned by authenticated user</td>
+                    <td><code>200 OK</code>, <code>404 Not Found</code></td>
+                  </tr>
+                  <tr>
+                    <td><span class="method-badge put">PUT</span></td>
+                    <td><code>/api/patients/:id</code></td>
+                    <td><span class="badge-auth">Bearer JWT</span></td>
+                    <td>Replace patient data</td>
+                    <td><code>200 OK</code>, <code>404 Not Found</code></td>
+                  </tr>
+                  <tr>
+                    <td><span class="method-badge patch">PATCH</span></td>
+                    <td><code>/api/patients/:id</code></td>
+                    <td><span class="badge-auth">Bearer JWT</span></td>
+                    <td>Partially update patient fields</td>
+                    <td><code>200 OK</code>, <code>404 Not Found</code></td>
+                  </tr>
+                  <tr>
+                    <td><span class="method-badge delete">DELETE</span></td>
+                    <td><code>/api/patients/:id</code></td>
+                    <td><span class="badge-auth">Bearer JWT</span></td>
+                    <td>Delete patient owned by user (cascades mappings)</td>
+                    <td><code>200 OK</code>, <code>404 Not Found</code></td>
+                  </tr>
+                  <tr>
+                    <td><span class="method-badge get">GET</span></td>
+                    <td><code>/api/doctors</code></td>
+                    <td><span class="badge-auth">Bearer JWT</span></td>
+                    <td>List all registered doctors</td>
+                    <td><code>200 OK</code></td>
+                  </tr>
+                  <tr>
+                    <td><span class="method-badge post">POST</span></td>
+                    <td><code>/api/doctors</code></td>
+                    <td><span class="badge-auth">Bearer JWT</span></td>
+                    <td>Create a doctor (firstName, lastName, specialty)</td>
+                    <td><code>201 Created</code>, <code>400 Bad Request</code></td>
+                  </tr>
+                  <tr>
+                    <td><span class="method-badge get">GET</span></td>
+                    <td><code>/api/doctors/:id</code></td>
+                    <td><span class="badge-auth">Bearer JWT</span></td>
+                    <td>Retrieve doctor by ID</td>
+                    <td><code>200 OK</code>, <code>404 Not Found</code></td>
+                  </tr>
+                  <tr>
+                    <td><span class="method-badge delete">DELETE</span></td>
+                    <td><code>/api/doctors/:id</code></td>
+                    <td><span class="badge-auth">Bearer JWT</span></td>
+                    <td>Delete doctor (cascades mappings)</td>
+                    <td><code>200 OK</code>, <code>404 Not Found</code></td>
+                  </tr>
+                  <tr>
+                    <td><span class="method-badge post">POST</span></td>
+                    <td><code>/api/patients/:patientId/mappings</code></td>
+                    <td><span class="badge-auth">Bearer JWT</span></td>
+                    <td>Assign a doctor to an owned patient</td>
+                    <td><code>201 Created</code>, <code>409 Conflict</code></td>
+                  </tr>
+                  <tr>
+                    <td><span class="method-badge get">GET</span></td>
+                    <td><code>/api/patients/:patientId/mappings</code></td>
+                    <td><span class="badge-auth">Bearer JWT</span></td>
+                    <td>List all doctors assigned to patient</td>
+                    <td><code>200 OK</code>, <code>404 Not Found</code></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="app-footer">
+      <div class="footer-content">
+        <span>Healthcare Backend REST API &bull; Node.js &bull; Express &bull; PostgreSQL (PGlite)</span>
+        <span class="text-muted">Interactive Console &bull; Automated Test Coverage 19/19</span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
